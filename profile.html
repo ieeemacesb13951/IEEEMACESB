@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Member Portfolio | IEEE MACE SB</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      :root {
+        --bg-color: #010101;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --accent: #3498db;
+        --glow: rgba(52, 152, 219, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-color);
+        background-image: url("BG.jpeg");
+        background-size: cover;
+        background-position: center;
+        color: var(--text-primary);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 30px 15px;
+      }
+
+      .portfolio-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 28px 24px;
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+        position: relative;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      .top-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .member-name {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .member-role {
+        font-size: 13px;
+        color: var(--accent);
+        background: rgba(52, 152, 219, 0.15);
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+      }
+
+      /* Circular Avatar */
+      .avatar-wrapper {
+        margin: 20px auto 10px;
+        position: relative;
+        width: 160px;
+        height: 160px;
+      }
+
+      .avatar-frame {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: 4px solid var(--accent);
+        box-shadow: 0 0 20px var(--glow);
+        overflow: hidden;
+        position: relative;
+        background: #111;
+        user-select: none;
+        touch-action: none;
+      }
+
+      .avatar-frame.admin-mode {
+        cursor: grab;
+      }
+
+      .avatar-frame.admin-mode:active {
+        cursor: grabbing;
+      }
+
+      .avatar-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform-origin: center center;
+        pointer-events: none;
+      }
+
+      /* Admin Control Drawer: hidden from regular visitors */
+      .admin-panel {
+        display: none;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 14px;
+        margin: 15px 0;
+        text-align: left;
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .control-row input[type="range"] {
+        flex: 1;
+        margin: 0 10px;
+        accent-color: var(--accent);
+      }
+
+      .btn-save {
+        width: 100%;
+        background: #27ae60;
+        color: #fff;
+        border: none;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: background 0.2s ease;
+      }
+
+      .btn-save:hover {
+        background: #2ecc71;
+      }
+
+      .status-text {
+        font-size: 11px;
+        text-align: center;
+        margin-top: 6px;
+        color: #2ecc71;
+      }
+
+      .bio {
+        color: var(--text-secondary);
+        font-size: 13.5px;
+        line-height: 1.5;
+        margin: 14px 0 20px;
+      }
+
+      .contact-links {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .contact-btn {
+        text-decoration: none;
+        color: var(--text-primary);
+        font-size: 13px;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      .contact-btn:hover {
+        background: rgba(52, 152, 219, 0.25);
+        border-color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="portfolio-card">
+      <div class="top-section">
+        <h1 class="member-name" id="name">MEMBER NAME</h1>
+        <p class="member-role" id="role">ROLE / DEPARTMENT</p>
+      </div>
+
+      <div class="avatar-wrapper">
+        <div class="avatar-frame" id="avatarFrame">
+          <img src="" alt="Profile Avatar" id="avatarImg" />
+        </div>
+      </div>
+
+      <!-- Admin Editor Tools -->
+      <div class="admin-panel" id="adminPanel">
+        <div class="control-row">
+          <span>Zoom:</span>
+          <input type="range" id="zoomRange" min="1" max="3" step="0.05" value="1" />
+          <span id="zoomVal">1.0x</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
+          👉 Drag the photo directly inside the circle to position it.</p>
+          <!-- Role & Text Color Controls -->
+        <div style="margin: 10px 0; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px;">
+          <label style="display:block; font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Role / Designation:</label>
+          <input type="text" id="roleInput" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; font-size: 12px; margin-bottom: 8px; box-sizing: border-box;" />
+
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary);">
+            <span>Role Color:</span>
+            <input type="color" id="roleColorPicker" value="#3498db" style="border: none; width: 32px; height: 24px; cursor: pointer; background: transparent;" />
+            <span style="margin-left: 10px;">Name Color:</span>
+            <input type="color" id="nameColorPicker" value="#ffffff" style="border: none; width: 32px; height: 24px; cursor: pointer; background: transparent;" />
+          </div>
+        </div>
+        <button class="btn-save" id="saveBtn">Save Alignment</button>
+        <div class="status-text" id="statusMsg"></div>
+      </div>
+
+      <p class="bio" id="bio"></p>
+
+      <div class="contact-links">
+        <a href="#" class="contact-btn" id="linkedin" target="_blank">LinkedIn</a>
+        <a href="#" class="contact-btn" id="github" target="_blank">GitHub</a>
+        <a href="#" class="contact-btn" id="whatsapp" target="_blank">WhatsApp</a>
+        <a href="#" class="contact-btn" id="email" target="_blank">Email</a>
+      </div>
+    </div>
+
+    <script src="members.js"></script>
+    <script>
+      const SB_URL = "https://gatpsfeadqoaadxtoxfp.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhdHBzZmVhZHFvYWFkeHRveGZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0Mzc2NjMsImV4cCI6MjEwNjAxMzY2M30.Pl7mAabyNHBxxAo0cCRAFEkf5B5-dZ-juRto1905uVc";
+    const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+      const urlParams = new URLSearchParams(window.location.search);
+      const memberId = urlParams.get("id") || "01";
+      const isAdmin = urlParams.get("admin") === "webmasteradmincontrolTXadmin";
+      const data = (typeof members !== "undefined" && members[memberId]) ? members[memberId] : (typeof members !== "undefined" ? members["01"] : null);
+
+      const avatarImg = document.getElementById("avatarImg");
+      const frame = document.getElementById("avatarFrame");
+      const statusMsg = document.getElementById("statusMsg");
+
+      let posX = (data && data.posX !== undefined) ? data.posX : 0;
+      let posY = (data && data.posY !== undefined) ? data.posY : 0;
+      let scale = (data && data.zoom !== undefined) ? data.zoom : 1;
+
+      // Load saved alignment from Supabase cloud
+    if (sb) {
+      sb.from('alignments')
+        .select('*')
+        .eq('id', memberId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            scale = data.zoom;
+            posX = data.pos_x;
+            posY = data.pos_y;
+            applyTransform();
+            const zR = document.getElementById("zoomRange");
+            const zV = document.getElementById("zoomVal");
+            if (zR) zR.value = scale;
+            if (zV) zV.textContent = scale.toFixed(1) + "x";
+            const rEl = document.getElementById("role");
+const nEl = document.getElementById("name");
+if (data.custom_role && rEl) rEl.textContent = data.custom_role;
+if (data.role_color && rEl) rEl.style.color = data.role_color;
+if (data.name_color && nEl) nEl.style.color = data.name_color;
+          }
+        });
+    }
+     
+      
+
+      function applyTransform() {
+        avatarImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+      }
+
+      if (data) {
+        document.getElementById("name").textContent = data.name;
+        document.getElementById("role").textContent = data.role + " | " + data.department;
+        document.getElementById("bio").textContent = data.bio;
+        avatarImg.src = data.avatar;
+        applyTransform();
+
+        if (data.linkedin) document.getElementById("linkedin").href = data.linkedin;
+        if (data.github) document.getElementById("github").href = data.github;
+        if (data.whatsapp) document.getElementById("whatsapp").href = data.whatsapp;
+        if (data.email) document.getElementById("email").href = data.email;
+      }
+
+      // Admin mode: only activated if URL has &admin=true
+      if (isAdmin) {
+        document.getElementById("adminPanel").style.display = "block";
+        frame.classList.add("admin-mode");
+        const rEl = document.getElementById("role");
+    const nEl = document.getElementById("name");
+    const rInput = document.getElementById("roleInput");
+    const rColor = document.getElementById("roleColorPicker");
+    const nColor = document.getElementById("nameColorPicker");
+
+    if (rInput && rEl) {
+      rInput.value = rEl.textContent;
+      rInput.addEventListener("input", (e) => { rEl.textContent = e.target.value; });
+    }
+    if (rColor && rEl) {
+      rColor.addEventListener("input", (e) => { rEl.style.color = e.target.value; });
+    }
+    if (nColor && nEl) {
+      nColor.addEventListener("input", (e) => { nEl.style.color = e.target.value; });
+    }
+
+        const zoomRange = document.getElementById("zoomRange");
+        const zoomVal = document.getElementById("zoomVal");
+        zoomRange.value = scale;
+        zoomVal.textContent = scale.toFixed(1) + "x";
+
+        zoomRange.addEventListener("input", (e) => {
+          scale = parseFloat(e.target.value);
+          zoomVal.textContent = scale.toFixed(1) + "x";
+          applyTransform();
+        });
+
+        let isDragging = false, startX, startY;
+        const onStart = (e) => {
+          isDragging = true;
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          const cy = e.touches ? e.touches[0].clientY : e.clientY;
+          startX = cx - posX;
+          startY = cy - posY;
+        };
+
+        const onMove = (e) => {
+          if (!isDragging) return;
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          const cy = e.touches ? e.touches[0].clientY : e.clientY;
+          posX = Math.round(cx - startX);
+          posY = Math.round(cy - startY);
+          applyTransform();
+        };
+
+        const onEnd = () => { isDragging = false; };
+
+        frame.addEventListener("mousedown", onStart);
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onEnd);
+        frame.addEventListener("touchstart", onStart, { passive: true });
+        window.addEventListener("touchmove", onMove, { passive: true });
+        window.addEventListener("touchend", onEnd);
+
+       // Save position permanently to Supabase cloud
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        if (!sb) {
+          statusMsg.textContent = "Database connection missing.";
+          return;
+        }
+        statusMsg.textContent = "Saving to cloud...";
+        const { error } = await sb.from('alignments').upsert({
+          id: memberId,
+          zoom: scale,
+          pos_x: posX,
+          pos_y: posY,
+          custom_role: rInput ? rInput.value : undefined,
+          role_color: rColor ? rColor.value : undefined,
+          name_color: nColor ? nColor.value : undefined
+        });
+
+        if (!error) {
+          statusMsg.textContent = "✓ Saved globally! Visible on all devices.";
+        } else {
+          statusMsg.textContent = "Save failed: " + error.message;
+        }
+        setTimeout(() => { statusMsg.textContent = ""; }, 4000);
+      }); 
+      }
+    </script>
+  </body>
+</html>
